@@ -18,7 +18,7 @@ export interface GitHubAuthConfig {
 
 // Configuration GitHub OAuth
 const GITHUB_CONFIG: GitHubAuthConfig = {
-  clientId: process.env.VITE_GITHUB_CLIENT_ID || 'your-github-client-id',
+  clientId: import.meta.env.VITE_GITHUB_CLIENT_ID || 'your-github-client-id',
   redirectUri: `${window.location.origin}/auth/github/callback`,
   scope: 'user:email,repo,public_repo'
 };
