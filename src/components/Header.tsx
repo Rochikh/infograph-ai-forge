@@ -1,9 +1,11 @@
 import { Brain, Github, Menu, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
+import { useGitHubAuth } from "@/services/githubAuth";
 
 const Header = () => {
   const location = useLocation();
+  const { isAuthenticated, login } = useGitHubAuth();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -67,10 +69,19 @@ const Header = () => {
 
         {/* Actions */}
         <div className="flex items-center space-x-3">
-          <Button variant="outline" size="sm" className="hidden sm:flex">
-            <Github className="h-4 w-4 mr-2" />
-            Connecter GitHub
-          </Button>
+          {!isAuthenticated ? (
+            <Button variant="outline" size="sm" className="hidden sm:flex" onClick={login}>
+              <Github className="h-4 w-4 mr-2" />
+              Connecter GitHub
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" className="hidden sm:flex" asChild>
+              <Link to="/settings">
+                <Github className="h-4 w-4 mr-2" />
+                GitHub connecté
+              </Link>
+            </Button>
+          )}
           <Button variant="action" size="sm" asChild>
             <Link to="/create">Créer</Link>
           </Button>

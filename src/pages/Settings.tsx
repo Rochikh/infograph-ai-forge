@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { CheckCircle, Github, Settings as SettingsIcon, User, AlertTriangle } from "lucide-react";
+import { CheckCircle, Github, Settings as SettingsIcon, User, AlertTriangle, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,49 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useGitHubAuth } from "@/services/githubAuth";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
 const Settings = () => {
   const { toast } = useToast();
-  const [isConnected, setIsConnected] = useState(false);
-  const [githubUser, setGithubUser] = useState({
-    username: "",
-    name: "",
-    email: "",
-    avatar: ""
-  });
-
-  const handleGithubConnect = () => {
-    // Simulation de la connexion OAuth GitHub
-    setIsConnected(true);
-    setGithubUser({
-      username: "johndoe",
-      name: "John Doe",
-      email: "john.doe@email.com",
-      avatar: "https://github.com/johndoe.png"
-    });
-    
-    toast({
-      title: "GitHub connecté",
-      description: "Votre compte GitHub a été connecté avec succès",
-    });
-  };
-
-  const handleDisconnect = () => {
-    setIsConnected(false);
-    setGithubUser({
-      username: "",
-      name: "",
-      email: "",
-      avatar: ""
-    });
-    
-    toast({
-      title: "GitHub déconnecté",
-      description: "Votre compte GitHub a été déconnecté",
-    });
-  };
+  const { isAuthenticated, user, isLoading, error, login, logout } = useGitHubAuth();
 
   return (
     <div className="min-h-screen bg-background">
@@ -77,7 +40,7 @@ const Settings = () => {
               <CardTitle className="flex items-center">
                 <Github className="h-5 w-5 mr-2" />
                 Connexion GitHub
-                {isConnected && (
+                {isAuthenticated && (
                   <Badge className="ml-2 bg-success text-success-foreground">
                     <CheckCircle className="h-3 w-3 mr-1" />
                     Connecté
@@ -89,41 +52,75 @@ const Settings = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {!isConnected ? (
+              {error && (
+                <Alert className="mb-4">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              
+              {!isAuthenticated ? (
                 <div className="space-y-4">
                   <Alert>
                     <AlertTriangle className="h-4 w-4" />
                     <AlertDescription>
                       Vous devez connecter votre compte GitHub pour pouvoir publier vos infographies sur GitHub Pages.
+                      <br />
+                      <strong>Note :</strong> Cette fonctionnalité nécessite la configuration d'une GitHub App OAuth. 
+                      En attendant, vous pouvez créer manuellement vos repositories.
                     </AlertDescription>
                   </Alert>
                   
-                  <Button 
-                    variant="action" 
-                    onClick={handleGithubConnect}
-                    className="w-full sm:w-auto"
-                  >
-                    <Github className="h-4 w-4 mr-2" />
-                    Connecter avec GitHub
-                  </Button>
+                  <div className="bg-muted/50 p-4 rounded-lg">
+                    <h4 className="font-semibold mb-2">Configuration requise :</h4>
+                    <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+                      <li>Créer une GitHub App OAuth dans les paramètres développeur</li>
+                      <li>Configurer l'URL de callback : <code className="bg-background px-1 rounded">{window.location.origin}/auth/github/callback</code></li>
+                      <li>Ajouter les permissions : <code className="bg-background px-1 rounded">user:email, repo, public_repo</code></li>
+                      <li>Configurer le Client ID dans les variables d'environnement</li>
+                    </ol>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="action" 
+                      onClick={login}
+                      disabled={isLoading}
+                      className="flex-1"
+                    >
+                      <Github className="h-4 w-4 mr-2" />
+                      {isLoading ? "Connexion..." : "Connecter avec GitHub"}
+                    </Button>
+                    
+                    <Button variant="outline" asChild>
+                      <a 
+                        href="https://github.com/settings/applications/new" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Créer GitHub App
+                      </a>
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-4">
                   <div className="flex items-center space-x-4 p-4 bg-muted/50 rounded-lg">
                     <img 
-                      src={githubUser.avatar} 
+                      src={user?.avatar_url} 
                       alt="Avatar GitHub"
                       className="w-12 h-12 rounded-full"
                     />
                     <div className="flex-1">
-                      <h3 className="font-medium">{githubUser.name}</h3>
-                      <p className="text-sm text-muted-foreground">@{githubUser.username}</p>
-                      <p className="text-sm text-muted-foreground">{githubUser.email}</p>
+                      <h3 className="font-medium">{user?.name}</h3>
+                      <p className="text-sm text-muted-foreground">@{user?.login}</p>
+                      <p className="text-sm text-muted-foreground">{user?.email}</p>
                     </div>
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={handleDisconnect}
+                      onClick={logout}
                     >
                       Déconnecter
                     </Button>
@@ -134,7 +131,7 @@ const Settings = () => {
           </Card>
 
           {/* Repository Settings */}
-          {isConnected && (
+          {isAuthenticated && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
@@ -180,7 +177,7 @@ const Settings = () => {
           )}
 
           {/* Permissions */}
-          {isConnected && (
+          {isAuthenticated && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">

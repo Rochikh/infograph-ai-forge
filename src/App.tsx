@@ -8,6 +8,7 @@ import Create from "./pages/Create";
 import MyInfographics from "./pages/MyInfographics";
 import Settings from "./pages/Settings";
 import About from "./pages/About";
+import GitHubCallback from "./pages/GitHubCallback";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/my-infographics" element={<MyInfographics />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/about" element={<About />} />
+          <Route path="/auth/github/callback" element={<GitHubCallback />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
