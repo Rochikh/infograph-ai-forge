@@ -18,16 +18,25 @@ export interface GitHubAuthConfig {
 
 // Configuration GitHub OAuth
 const GITHUB_CONFIG: GitHubAuthConfig = {
-  clientId: import.meta.env.VITE_GITHUB_CLIENT_ID || 'your-github-client-id',
+  clientId: import.meta.env.VITE_GITHUB_CLIENT_ID || 'demo-client-id',
   redirectUri: `${window.location.origin}/auth/github/callback`,
   scope: 'user:email,repo,public_repo'
 };
+
+// Mode démo pour le développement local
+const DEMO_MODE = !import.meta.env.VITE_GITHUB_CLIENT_ID || import.meta.env.VITE_GITHUB_CLIENT_ID === 'demo-client-id';
 
 export class GitHubAuthService {
   /**
    * Redirige vers GitHub pour l'authentification OAuth
    */
   static initiateAuth(): void {
+    if (DEMO_MODE) {
+      // Mode démo - simuler une connexion réussie
+      this.simulateDemoAuth();
+      return;
+    }
+
     const params = new URLSearchParams({
       client_id: GITHUB_CONFIG.clientId,
       redirect_uri: GITHUB_CONFIG.redirectUri,
@@ -38,6 +47,33 @@ export class GitHubAuthService {
 
     const authUrl = `https://github.com/login/oauth/authorize?${params.toString()}`;
     window.location.href = authUrl;
+  }
+
+  /**
+   * Simule une authentification réussie en mode démo
+   */
+  private static simulateDemoAuth(): void {
+    const demoUser: GitHubUser = {
+      id: 12345,
+      login: 'demo-user',
+      name: 'Utilisateur Démo',
+      email: 'demo@example.com',
+      avatar_url: 'https://github.com/github.png',
+      html_url: 'https://github.com/demo-user'
+    };
+
+    const demoToken = 'demo-token-' + Date.now();
+
+    localStorage.setItem('github_access_token', demoToken);
+    localStorage.setItem('github_user', JSON.stringify(demoUser));
+
+    // Déclencher un événement pour mettre à jour l'état
+    window.dispatchEvent(new CustomEvent('github-auth-success', { 
+      detail: { user: demoUser, token: demoToken } 
+    }));
+    
+    // Rediriger vers les paramètres
+    window.location.href = '/settings';
   }
 
   /**
@@ -337,6 +373,21 @@ export const useGitHubAuth = () => {
       setUser(JSON.parse(storedUser));
       setIsAuthenticated(true);
     }
+
+    // Écouter l'événement d'authentification démo
+    const handleDemoAuth = (event: CustomEvent) => {
+      const { user, token } = event.detail;
+      setAccessToken(token);
+      setUser(user);
+      setIsAuthenticated(true);
+      setIsLoading(false);
+    };
+
+    window.addEventListener('github-auth-success', handleDemoAuth as EventListener);
+
+    return () => {
+      window.removeEventListener('github-auth-success', handleDemoAuth as EventListener);
+    };
   }, []);
 
   const login = () => {
