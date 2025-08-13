@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, FileText, Github, Image, Link as LinkIcon, Upload } from "lucide-react";
+import { ArrowRight, FileText, Github, Image, Link as LinkIcon, Upload, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,8 +8,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useGitHubAuth } from "@/services/githubAuth";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import InfographicPreview from "@/components/InfographicPreview";
 
 const licenseOptions = [
   { value: "cc-by", label: "CC BY - Attribution" },
@@ -20,6 +22,8 @@ const licenseOptions = [
 
 const Create = () => {
   const { toast } = useToast();
+  const { isAuthenticated } = useGitHubAuth();
+  const [currentStep, setCurrentStep] = useState<'form' | 'preview'>('form');
   const [formData, setFormData] = useState({
     articleUrl: "",
     imageTitle: "",
@@ -31,6 +35,15 @@ const Create = () => {
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [generatedData, setGeneratedData] = useState<{
+    title: string;
+    summary: string;
+    keyPoints: string[];
+    author: string;
+    license: string;
+    sourceUrl?: string;
+  } | null>(null);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -51,16 +64,118 @@ const Create = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulation de traitement
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    try {
+      // Simulation d'appel IA Perplexity
+      await new Promise(resolve => setTimeout(resolve, 3000));
 
-    toast({
-      title: "Infographie en cours de génération",
-      description: "Votre demande est en cours de traitement...",
-    });
+      // Données simulées pour la démo
+      const mockData = {
+        title: formData.inputType === 'url' 
+          ? "Intelligence Artificielle en classe : Guide d'intégration responsable"
+          : formData.imageTitle,
+        summary: "L'intégration de l'intelligence artificielle dans l'éducation représente une opportunité majeure pour améliorer l'apprentissage. Cependant, cette adoption doit se faire de manière réfléchie et responsable, en tenant compte des enjeux pédagogiques, éthiques et techniques.",
+        keyPoints: [
+          "Comprendre les différents types d'IA éducative disponibles",
+          "Définir des objectifs pédagogiques clairs avant l'implémentation",
+          "Former les enseignants aux outils et aux bonnes pratiques",
+          "Établir un cadre éthique pour l'utilisation des données des élèves",
+          "Évaluer régulièrement l'impact sur l'apprentissage",
+          "Maintenir l'équilibre entre technologie et interaction humaine"
+        ],
+        author: `${formData.firstName} ${formData.lastName}`,
+        license: licenseOptions.find(opt => opt.value === formData.license)?.label || formData.license,
+        sourceUrl: formData.inputType === 'url' ? formData.articleUrl : undefined
+      };
 
-    setIsLoading(false);
+      setGeneratedData(mockData);
+      setCurrentStep('preview');
+
+      toast({
+        title: "Infographie générée !",
+        description: "Votre infographie est prête. Vous pouvez la prévisualiser avant publication.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Une erreur s'est produite lors de la génération.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const handleEdit = () => {
+    setCurrentStep('form');
+  };
+
+  const handlePublish = async () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Connexion requise",
+        description: "Veuillez vous connecter à GitHub pour publier votre infographie.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsPublishing(true);
+    
+    try {
+      // Simulation de publication sur GitHub
+      await new Promise(resolve => setTimeout(resolve, 4000));
+      
+      const projectUrl = `https://${formData.firstName.toLowerCase()}${formData.lastName.toLowerCase()}.github.io/${formData.projectTitle}`;
+      
+      toast({
+        title: "Publication réussie !",
+        description: `Votre infographie est maintenant disponible sur GitHub Pages.`,
+      });
+
+      // Redirection vers la page des infographies
+      // navigate('/my-infographics');
+    } catch (error) {
+      toast({
+        title: "Erreur de publication",
+        description: "Une erreur s'est produite lors de la publication sur GitHub.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  // Si on est en mode preview, afficher la prévisualisation
+  if (currentStep === 'preview' && generatedData) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        
+        <main className="container max-w-6xl py-12">
+          {/* Breadcrumb */}
+          <div className="mb-8">
+            <Button 
+              variant="ghost" 
+              onClick={handleEdit}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Retour à l'édition
+            </Button>
+          </div>
+
+          <InfographicPreview 
+            data={generatedData}
+            onEdit={handleEdit}
+            onPublish={handlePublish}
+            isPublishing={isPublishing}
+          />
+        </main>
+
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -252,16 +367,16 @@ const Create = () => {
               className="group"
             >
               {isLoading ? (
-                "Génération en cours..."
+                "Analyse en cours avec l'IA..."
               ) : (
                 <>
-                  Générer mon infographie
+                  Analyser et prévisualiser
                   <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
             </Button>
             <p className="text-sm text-muted-foreground mt-4">
-              Votre infographie sera automatiquement publiée sur GitHub Pages
+              L'IA va analyser votre contenu et générer une infographie que vous pourrez prévisualiser
             </p>
           </div>
         </form>
