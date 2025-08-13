@@ -26,7 +26,29 @@ export default {
 				foreground: 'hsl(var(--foreground))',
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					foreground: 'hsl(var(--primary-foreground))',
+					light: 'hsl(var(--primary-light))',
+					glow: 'hsl(var(--primary-glow))'
+				},
+				ai: {
+					DEFAULT: 'hsl(var(--ai))',
+					foreground: 'hsl(var(--ai-foreground))',
+					light: 'hsl(var(--ai-light))',
+					glow: 'hsl(var(--ai-glow))'
+				},
+				action: {
+					DEFAULT: 'hsl(var(--action))',
+					foreground: 'hsl(var(--action-foreground))',
+					light: 'hsl(var(--action-light))',
+					glow: 'hsl(var(--action-glow))'
+				},
+				success: {
+					DEFAULT: 'hsl(var(--success))',
+					foreground: 'hsl(var(--success-foreground))'
+				},
+				warning: {
+					DEFAULT: 'hsl(var(--warning))',
+					foreground: 'hsl(var(--warning-foreground))'
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
