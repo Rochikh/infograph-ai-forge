@@ -65,29 +65,47 @@ const Create = () => {
     setIsLoading(true);
 
     try {
-      // Simulation d'appel IA Perplexity
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Préparer le prompt pour l'IA
+      let prompt = '';
+      if (formData.inputType === 'url') {
+        prompt = `Analyse le contenu de cet article : ${formData.articleUrl}`;
+      } else {
+        prompt = `Analyse et crée une infographie sur le sujet suivant : ${formData.imageTitle}`;
+      }
 
-      // Données simulées pour la démo
-      const mockData = {
-        title: formData.inputType === 'url' 
-          ? "Intelligence Artificielle en classe : Guide d'intégration responsable"
-          : formData.imageTitle,
-        summary: "L'intégration de l'intelligence artificielle dans l'éducation représente une opportunité majeure pour améliorer l'apprentissage. Cependant, cette adoption doit se faire de manière réfléchie et responsable, en tenant compte des enjeux pédagogiques, éthiques et techniques.",
-        keyPoints: [
-          "Comprendre les différents types d'IA éducative disponibles",
-          "Définir des objectifs pédagogiques clairs avant l'implémentation",
-          "Former les enseignants aux outils et aux bonnes pratiques",
-          "Établir un cadre éthique pour l'utilisation des données des élèves",
-          "Évaluer régulièrement l'impact sur l'apprentissage",
-          "Maintenir l'équilibre entre technologie et interaction humaine"
+      // Appel à l'Edge Function Supabase
+      const response = await fetch('/api/generate-infographic', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la génération de l\'infographie');
+      }
+
+      const aiResult = await response.json();
+
+      const generatedContent = {
+        title: aiResult.title || (formData.inputType === 'url' 
+          ? "Analyse du contenu web"
+          : formData.imageTitle),
+        summary: aiResult.summary || "Contenu analysé avec succès par l'IA.",
+        keyPoints: aiResult.keyPoints || [
+          "Point d'analyse principal",
+          "Information importante extraite",
+          "Élément clé identifié",
+          "Conclusion principale",
+          "Recommandation suggérée"
         ],
         author: `${formData.firstName} ${formData.lastName}`,
         license: licenseOptions.find(opt => opt.value === formData.license)?.label || formData.license,
         sourceUrl: formData.inputType === 'url' ? formData.articleUrl : undefined
       };
 
-      setGeneratedData(mockData);
+      setGeneratedData(generatedContent);
       setCurrentStep('preview');
 
       toast({
