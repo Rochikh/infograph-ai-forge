@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { supabase } from "@/lib/supabase";
 import { ArrowRight, FileText, Github, Image, Link as LinkIcon, Upload, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -74,19 +75,14 @@ const Create = () => {
       }
 
       // Appel à l'Edge Function Supabase
-      const response = await fetch('/api/generate-infographic', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ prompt }),
+      const { data: aiResult, error } = await supabase.functions.invoke('generate-infographic', {
+        body: { prompt }
       });
 
-      if (!response.ok) {
-        throw new Error('Erreur lors de la génération de l\'infographie');
+      if (error) {
+        console.error('Erreur Edge Function:', error);
+        throw new Error(`Erreur lors de la génération: ${error.message}`);
       }
-
-      const aiResult = await response.json();
 
       const generatedContent = {
         title: aiResult.title || (formData.inputType === 'url' 
