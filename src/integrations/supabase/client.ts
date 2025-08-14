@@ -2,8 +2,8 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = "https://counwjfwjmlmvbljgwmw.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvdW53amZ3am1sbXZibGpnd213Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxNzQ5MTUsImV4cCI6MjA3MDc1MDkxNX0.jFqckNEknfTyJzGtchIUz67skIPNcnO0hW9ovHsYqPo";
+const SUPABASE_URL = "https://infograph.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "YOUR_INFOGRAPH_ANON_KEY";
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
